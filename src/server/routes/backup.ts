@@ -32,6 +32,16 @@ backupRouter.get('/', (req: Request, res: Response) => {
       'customer_vehicles',
       'banking_transactions',
       'audit_events',
+      'asset_status_logs',
+      'meter_replacement_exceptions',
+      'fuel_density_records',
+      'stock_adjustments',
+      'customer_invoices',
+      'customer_invoice_items',
+      'counter_sales',
+      'bank_statement_lines',
+      'notification_templates',
+      'notification_logs',
     ];
 
     const backupData: Record<string, any[]> = {};

@@ -20,6 +20,14 @@ export function initDatabase(): void {
   const schemaPath = path.resolve(import.meta.dirname, './schema.sql');
   const schemaSql = fs.readFileSync(schemaPath, 'utf8');
   db.exec(schemaSql);
+
+  // Safe non-destructive column migrations
+  try {
+    db.prepare('ALTER TABLE credit_sales ADD COLUMN is_billed INTEGER NOT NULL DEFAULT 0').run();
+  } catch {}
+  try {
+    db.prepare('ALTER TABLE credit_sales ADD COLUMN invoice_id TEXT').run();
+  } catch {}
 }
 
 // Initialize on module load

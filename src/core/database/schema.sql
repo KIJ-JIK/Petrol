@@ -211,6 +211,8 @@ CREATE TABLE IF NOT EXISTS credit_sales (
   slip_no TEXT,
   status TEXT NOT NULL DEFAULT 'UNPAID',
   allocated_paise INTEGER NOT NULL DEFAULT 0,
+  is_billed INTEGER NOT NULL DEFAULT 0,
+  invoice_id TEXT,
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
@@ -333,4 +335,152 @@ CREATE TABLE IF NOT EXISTS sync_queue (
   status TEXT NOT NULL DEFAULT 'PENDING',
   error_message TEXT,
   processed_at TEXT
+);
+
+-- ADD-ON MODULE 1: ASSET OPERATIONAL STATUS & METER BASELINES
+CREATE TABLE IF NOT EXISTS asset_status_logs (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  asset_type TEXT NOT NULL, -- TANK, NOZZLE, DISPENSER
+  asset_id TEXT NOT NULL,
+  previous_status TEXT NOT NULL,
+  new_status TEXT NOT NULL, -- ACTIVE, INACTIVE, MAINTENANCE, UNAVAILABLE
+  reason TEXT NOT NULL,
+  changed_by_user_id TEXT NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE TABLE IF NOT EXISTS meter_replacement_exceptions (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  nozzle_id TEXT NOT NULL REFERENCES nozzles(id),
+  old_meter_id TEXT,
+  old_final_reading REAL NOT NULL,
+  new_meter_id TEXT NOT NULL,
+  new_baseline_reading REAL NOT NULL,
+  reason TEXT NOT NULL,
+  evidence_notes TEXT,
+  approved_by_user_id TEXT NOT NULL REFERENCES users(id),
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+-- ADD-ON MODULE 2: OPERATIONAL QUALITY, DENSITY & CONTROLLED STOCK ADJUSTMENTS
+CREATE TABLE IF NOT EXISTS fuel_density_records (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  tank_id TEXT NOT NULL REFERENCES tanks(id),
+  product_id TEXT NOT NULL REFERENCES products(id),
+  sample_timestamp TEXT NOT NULL,
+  temperature_celsius REAL NOT NULL,
+  observed_density REAL NOT NULL, -- kg/m³
+  density_at_15c REAL NOT NULL, -- ASTM 53B calibrated
+  sampling_method TEXT NOT NULL DEFAULT 'HYDROMETER_MANUAL',
+  sample_result TEXT NOT NULL DEFAULT 'NORMAL', -- NORMAL, OUT_OF_SPEC, CONTAMINATED
+  reviewed_by_user_id TEXT NOT NULL REFERENCES users(id),
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE TABLE IF NOT EXISTS stock_adjustments (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  tank_id TEXT NOT NULL REFERENCES tanks(id),
+  product_id TEXT NOT NULL REFERENCES products(id),
+  adjustment_type TEXT NOT NULL, -- EVAPORATION, MEASUREMENT_CORRECTION, DAMAGE_CONTAMINATION, TRANSFER
+  quantity_litres REAL NOT NULL, -- negative for shrinkage/loss, positive for gain
+  unit TEXT NOT NULL DEFAULT 'Litre',
+  reason TEXT NOT NULL,
+  source_measurement TEXT,
+  approved_by_user_id TEXT NOT NULL REFERENCES users(id),
+  voucher_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+-- ADD-ON MODULE 3: PERIODIC BILLING & COUNTER POS
+CREATE TABLE IF NOT EXISTS customer_invoices (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  party_id TEXT NOT NULL REFERENCES parties(id),
+  invoice_number TEXT UNIQUE NOT NULL,
+  billing_cycle TEXT NOT NULL, -- WEEKLY, FORTNIGHTLY, MONTHLY, AD_HOC
+  from_date TEXT NOT NULL,
+  to_date TEXT NOT NULL,
+  total_litres REAL NOT NULL DEFAULT 0,
+  subtotal_paise INTEGER NOT NULL,
+  tax_paise INTEGER NOT NULL DEFAULT 0,
+  grand_total_paise INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'ISSUED', -- DRAFT, ISSUED, PAID, CANCELLED
+  created_by_user_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE TABLE IF NOT EXISTS customer_invoice_items (
+  id TEXT PRIMARY KEY,
+  invoice_id TEXT NOT NULL REFERENCES customer_invoices(id),
+  credit_sale_id TEXT NOT NULL REFERENCES credit_sales(id),
+  vehicle_no TEXT,
+  product_name TEXT NOT NULL,
+  litres REAL NOT NULL,
+  rate_paise INTEGER NOT NULL,
+  amount_paise INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS counter_sales (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  bill_number TEXT UNIQUE NOT NULL,
+  customer_name TEXT,
+  customer_phone TEXT,
+  product_category TEXT NOT NULL, -- LUBRICANT, DEF_ADBLUE, ACCESSORY
+  product_name TEXT NOT NULL,
+  quantity INTEGER NOT NULL,
+  unit_price_paise INTEGER NOT NULL,
+  total_amount_paise INTEGER NOT NULL,
+  tender_mode TEXT NOT NULL, -- CASH, UPI, CARD, SPLIT
+  cash_tendered_paise INTEGER NOT NULL DEFAULT 0,
+  digital_tendered_paise INTEGER NOT NULL DEFAULT 0,
+  sold_by_user_id TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+-- ADD-ON MODULE 4: BANK STATEMENT RECONCILIATION
+CREATE TABLE IF NOT EXISTS bank_statement_lines (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  bank_name TEXT NOT NULL,
+  transaction_date TEXT NOT NULL,
+  description TEXT NOT NULL,
+  reference_no TEXT,
+  credit_paise INTEGER NOT NULL DEFAULT 0,
+  debit_paise INTEGER NOT NULL DEFAULT 0,
+  match_status TEXT NOT NULL DEFAULT 'UNMATCHED', -- MATCHED, PENDING_REVIEW, UNMATCHED
+  matched_entity_type TEXT, -- CASH_DEPOSIT, UPI_SETTLEMENT, CARD_SETTLEMENT
+  matched_entity_id TEXT,
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+-- ADD-ON MODULE 5: COMMUNICATION & NOTIFICATION TEMPLATES
+CREATE TABLE IF NOT EXISTS notification_templates (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL, -- TRANSACTIONAL, SERVICE, CONSENT_PROMOTIONAL
+  dlt_template_id TEXT,
+  channel TEXT NOT NULL DEFAULT 'SMS', -- SMS, EMAIL, WHATSAPP
+  content_template TEXT NOT NULL,
+  active INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE TABLE IF NOT EXISTS notification_logs (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  template_id TEXT REFERENCES notification_templates(id),
+  recipient_phone TEXT NOT NULL,
+  recipient_name TEXT,
+  message_content TEXT NOT NULL,
+  channel TEXT NOT NULL,
+  delivery_status TEXT NOT NULL DEFAULT 'DELIVERED', -- SENT, DELIVERED, FAILED
+  provider_reference TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );

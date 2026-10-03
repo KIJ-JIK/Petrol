@@ -5,9 +5,17 @@ import { JournalEngine } from '../../core/domain/journal-engine.js';
 export function seed() {
   initDatabase();
 
-  console.log('--- Seeding SK Petroleum (Indian Oil), Gadhiya ---');
-
   const tables = [
+    'notification_logs',
+    'notification_templates',
+    'bank_statement_lines',
+    'counter_sales',
+    'customer_invoice_items',
+    'customer_invoices',
+    'stock_adjustments',
+    'fuel_density_records',
+    'meter_replacement_exceptions',
+    'asset_status_logs',
     'sync_queue',
     'audit_events',
     'banking_transactions',
@@ -351,6 +359,79 @@ export function seed() {
   for (const l of contraLines) {
     insertLine.run(l.id, l.journal_entry_id, l.account_code, l.account_name, l.debit_paise, l.credit_paise);
   }
+
+  // 12. Approved Transactional Notification Templates (DLT / TRAI Compliant)
+  const templates = [
+    {
+      id: 'tpl_credit_sale',
+      name: 'Credit Fuel Dispense Confirmation',
+      category: 'TRANSACTIONAL',
+      dlt_template_id: 'DLT-IOCL-110729381',
+      channel: 'SMS',
+      content_template: 'Dear {#var#}, fuel of {#var#}L worth Rs.{#var#} dispensed for vehicle {#var#} at SK Petroleum, Gadhiya. Current balance: Rs.{#var#}. - Indian Oil',
+    },
+    {
+      id: 'tpl_receipt_ack',
+      name: 'Khata Payment Receipt Acknowledgment',
+      category: 'TRANSACTIONAL',
+      dlt_template_id: 'DLT-IOCL-110729382',
+      channel: 'SMS',
+      content_template: 'Dear {#var#}, received payment of Rs.{#var#} via {#var#} (Ref: {#var#}). Updated balance: Rs.{#var#}. Thank you - SK Petroleum, Gadhiya.',
+    },
+    {
+      id: 'tpl_invoice_memo',
+      name: 'Monthly Periodic Statement Availability',
+      category: 'SERVICE',
+      dlt_template_id: 'DLT-IOCL-110729383',
+      channel: 'SMS',
+      content_template: 'Dear {#var#}, your fuel billing memo {#var#} for Rs.{#var#} is generated. Due date: {#var#}. View invoice online: {#var#}. - SK Petroleum.',
+    },
+    {
+      id: 'tpl_due_reminder',
+      name: 'Payment Due Friendly Reminder',
+      category: 'SERVICE',
+      dlt_template_id: 'DLT-IOCL-110729384',
+      channel: 'SMS',
+      content_template: 'Dear {#var#}, a friendly reminder that Rs.{#var#} is due for your Khata account at SK Petroleum, Gadhiya. Kindly settle to avoid credit interruption.',
+    },
+  ];
+
+  for (const t of templates) {
+    db.prepare(`
+      INSERT INTO notification_templates (id, name, category, dlt_template_id, channel, content_template, active)
+      VALUES (?, ?, ?, ?, ?, ?, 1)
+    `).run(t.id, t.name, t.category, t.dlt_template_id, t.channel, t.content_template);
+  }
+
+  // 13. Daily Fuel Density Calibration Records
+  db.prepare(`
+    INSERT INTO fuel_density_records (id, outlet_id, tank_id, product_id, sample_timestamp, temperature_celsius, observed_density, density_at_15c, sampling_method, sample_result, reviewed_by_user_id, notes)
+    VALUES (?, ?, 'tank_ms_1', 'prod_ms', ?, 29.5, 735.4, 745.1, 'HYDROMETER_MANUAL', 'NORMAL', 'usr_manager', 'Morning tank dip density check - within IOCL Gujarat tolerance')
+  `).run(uuidv4(), outletId, `${today} 06:45:00`);
+
+  db.prepare(`
+    INSERT INTO fuel_density_records (id, outlet_id, tank_id, product_id, sample_timestamp, temperature_celsius, observed_density, density_at_15c, sampling_method, sample_result, reviewed_by_user_id, notes)
+    VALUES (?, ?, 'tank_hsd_1', 'prod_hsd', ?, 29.0, 824.2, 833.6, 'HYDROMETER_MANUAL', 'NORMAL', 'usr_manager', 'Morning tank dip density check - normal diesel standard')
+  `).run(uuidv4(), outletId, `${today} 06:50:00`);
+
+  // 14. Sample Bank Statement Credit Entries for Reconciliation
+  db.prepare(`
+    INSERT INTO bank_statement_lines (id, outlet_id, bank_name, transaction_date, description, reference_no, credit_paise, debit_paise, match_status, notes)
+    VALUES (?, ?, 'SBI IOCL Current Account (Gadhiya)', ?, 'BY CASH DEPOSIT FORECOURT COUNTER', 'SBI-DEP-9941', 25000000, 0, 'MATCHED', 'Reconciled to CV-BANKING voucher')
+  `).run(uuidv4(), outletId, today);
+
+  db.prepare(`
+    INSERT INTO bank_statement_lines (id, outlet_id, bank_name, transaction_date, description, reference_no, credit_paise, debit_paise, match_status, notes)
+    VALUES (?, ?, 'SBI IOCL Current Account (Gadhiya)', ?, 'UPI IOCL QR BATCH SETTLEMENT ICICI', 'UPI-BAT-4401', 3450000, 0, 'UNMATCHED', 'Awaiting accountant review')
+  `).run(uuidv4(), outletId, today);
+
+  // 15. Sample Counter Sale (Servo Pride Packaged Lube)
+  const lubeBillId = uuidv4();
+  const lubeAmountPaise = 185000; // ₹1,850 for Servo Pride 15W-40 5L
+  db.prepare(`
+    INSERT INTO counter_sales (id, outlet_id, bill_number, customer_name, customer_phone, product_category, product_name, quantity, unit_price_paise, total_amount_paise, tender_mode, cash_tendered_paise, digital_tendered_paise, sold_by_user_id)
+    VALUES (?, ?, 'POS-LUBE-001', 'Arjun Bhai Patel', '9825445566', 'LUBRICANT', 'Servo Pride 15W-40 (5 Litres)', 1, 185000, 185000, 'UPI', 0, 185000, 'usr_attendant_1')
+  `).run(lubeBillId, outletId);
 
   console.log('✅ Seeding complete: SK Petroleum (Indian Oil), Gadhiya initialized with full facilities.');
 }

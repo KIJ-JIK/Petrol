@@ -10,6 +10,11 @@ import { vouchersRouter } from './routes/vouchers.js';
 import { payrollRouter } from './routes/payroll.js';
 import { reportsHubRouter } from './routes/reports-hub.js';
 import { backupRouter } from './routes/backup.js';
+import { mastersRouter } from './routes/masters.js';
+import { operationalQualityRouter } from './routes/operational-quality.js';
+import { billingRouter } from './routes/billing.js';
+import { reconciliationRouter } from './routes/reconciliation.js';
+import { communicationsRouter } from './routes/communications.js';
 import { db } from '../core/database/db.js';
 
 const app = express();
@@ -29,6 +34,11 @@ app.use('/api/v1/vouchers', vouchersRouter);
 app.use('/api/v1/payroll', payrollRouter);
 app.use('/api/v1/reports-hub', reportsHubRouter);
 app.use('/api/v1/backup', backupRouter);
+app.use('/api/v1/masters', mastersRouter);
+app.use('/api/v1/quality', operationalQualityRouter);
+app.use('/api/v1/billing', billingRouter);
+app.use('/api/v1/reconciliation', reconciliationRouter);
+app.use('/api/v1/communications', communicationsRouter);
 
 // Health & System status
 app.get('/api/health', (req, res) => {
