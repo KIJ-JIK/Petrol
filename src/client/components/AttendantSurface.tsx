@@ -40,22 +40,22 @@ export const AttendantSurface: React.FC = () => {
 
   // Tender Inputs
   const [denominations, setDenominations] = useState({
-    count_500: 40,
+    count_500: 30,
     count_200: 20,
-    count_100: 30,
-    count_50: 15,
+    count_100: 40,
+    count_50: 10,
     count_20: 10,
-    count_10: 20,
-    coins: 50,
+    count_10: 10,
+    coins: 40,
   });
 
-  const [upiAmount, setUpiAmount] = useState('45000');
-  const [cardAmount, setCardAmount] = useState('20000');
-  const [creditAmount, setCreditAmount] = useState('15000');
+  const [upiAmount, setUpiAmount] = useState('35000');
+  const [cardAmount, setCardAmount] = useState('15000');
+  const [creditAmount, setCreditAmount] = useState('12000');
   const [fleetAmount, setFleetAmount] = useState('0');
-  const [expenseAmount, setExpenseAmount] = useState('350');
+  const [expenseAmount, setExpenseAmount] = useState('200');
   const [cashDropAmount, setCashDropAmount] = useState('0');
-  const [varianceReason, setVarianceReason] = useState('Normal round-off and change shortage');
+  const [varianceReason, setVarianceReason] = useState('Forecourt round-off and change shortage');
 
   // Active Keypad Target
   const [focusedField, setFocusedField] = useState<{
@@ -78,8 +78,7 @@ export const AttendantSurface: React.FC = () => {
           current_price_paise: n.current_price_paise,
           dispenser_number: n.dispenser_number,
           opening_reading: n.last_reading,
-          // Pre-populate realistic simulated end-of-shift readings for quick verification
-          closing_reading: (n.last_reading + (n.product_code === 'MS' ? 320.5 : 460.2)).toFixed(2),
+          closing_reading: (n.last_reading + (n.product_code === 'MS' ? 245.5 : 380.2)).toFixed(2),
           testing_litres: '0',
           is_rollover: false,
           meter_max: n.meter_max || 9999999.99,
@@ -97,7 +96,6 @@ export const AttendantSurface: React.FC = () => {
     fetchActiveShift();
   }, []);
 
-  // Calculation helpers
   const calculateNozzle = (n: NozzleState) => {
     const opening = Number(n.opening_reading) || 0;
     const closing = Number(n.closing_reading) || 0;
@@ -115,11 +113,9 @@ export const AttendantSurface: React.FC = () => {
     return { gross, net, amountPaise };
   };
 
-  // Grand totals
   const totalSalesPaise = nozzles.reduce((acc, n) => acc + calculateNozzle(n).amountPaise, 0);
   const totalLitresSold = nozzles.reduce((acc, n) => acc + calculateNozzle(n).net, 0);
 
-  // Cash count from denominations
   const countedCashPaise =
     ((denominations.count_500 || 0) * 500 +
       (denominations.count_200 || 0) * 200 +
@@ -142,7 +138,6 @@ export const AttendantSurface: React.FC = () => {
   const cashVariancePaise = actualCashPaise - expectedCashPaise;
   const cashVarianceRupees = cashVariancePaise / 100;
 
-  // Keypad click handler
   const handleKeypadPress = (val: string) => {
     if (!focusedField) return;
 
@@ -195,10 +190,9 @@ export const AttendantSurface: React.FC = () => {
         denominations,
       },
       variance_reason: varianceReason,
-      notes: 'Submitted via Attendant Forecourt PWA',
+      notes: 'Submitted via Attendant Forecourt PWA for SK Petroleum, Gadhiya',
     };
 
-    // Check if offline
     if (offlineStore.getSimulatedOffline() || !navigator.onLine) {
       offlineStore.enqueue('SHIFT_SUBMIT_CLOSE', payload);
       setSubmitting(false);
@@ -226,40 +220,40 @@ export const AttendantSurface: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12 text-slate-400">
-        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-3"></div>
-        Loading active shift readings...
+      <div className="flex items-center justify-center p-12 text-slate-500">
+        <div className="w-6 h-6 border-2 border-blue-800 border-t-transparent rounded-full animate-spin mr-3"></div>
+        Loading forecourt shift readings...
       </div>
     );
   }
 
   if (submitSuccess) {
     return (
-      <div className="max-w-md mx-auto my-12 p-6 bg-slate-800 rounded-2xl border border-slate-700 text-center space-y-4">
-        <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+      <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-3xl border border-slate-200 text-center space-y-4 shadow-sm">
+        <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-200">
           <CheckCircle2 className="w-8 h-8" />
         </div>
-        <h2 className="text-xl font-bold text-white">Shift Close Submitted!</h2>
-        <p className="text-sm text-slate-300">
+        <h2 className="text-xl font-extrabold text-slate-900">Shift Close Submitted!</h2>
+        <p className="text-sm text-slate-600">
           Your closing readings and tender reconciliation have been submitted to Manager{' '}
           <strong>Ramesh Sharma</strong> for approval.
         </p>
-        <div className="bg-slate-900 p-4 rounded-xl text-left space-y-1 text-xs">
-          <div className="flex justify-between text-slate-400">
+        <div className="bg-slate-50 p-4 rounded-2xl text-left space-y-1.5 text-xs border border-slate-200">
+          <div className="flex justify-between text-slate-600">
             <span>Total Litres Sold:</span>
-            <span className="font-semibold text-white">{totalLitresSold} L</span>
+            <span className="font-bold text-slate-900">{totalLitresSold} L</span>
           </div>
-          <div className="flex justify-between text-slate-400">
+          <div className="flex justify-between text-slate-600">
             <span>Total Sales Value:</span>
-            <span className="font-semibold text-emerald-400">₹{(totalSalesPaise / 100).toLocaleString('en-IN')}</span>
+            <span className="font-bold text-blue-900 font-mono">₹{(totalSalesPaise / 100).toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex justify-between text-slate-400">
-            <span>Cash Counted + Drops:</span>
-            <span className="font-semibold text-white">₹{(actualCashPaise / 100).toLocaleString('en-IN')}</span>
+          <div className="flex justify-between text-slate-600">
+            <span>Counted Cash:</span>
+            <span className="font-bold text-slate-900 font-mono">₹{(actualCashPaise / 100).toLocaleString('en-IN')}</span>
           </div>
-          <div className="flex justify-between text-slate-400">
-            <span>Cash Variance:</span>
-            <span className={`font-semibold ${cashVarianceRupees >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
+          <div className="flex justify-between text-slate-600">
+            <span>Net Variance:</span>
+            <span className={`font-bold font-mono ${cashVarianceRupees >= 0 ? 'text-emerald-700' : 'text-amber-700'}`}>
               ₹{cashVarianceRupees.toFixed(2)}
             </span>
           </div>
@@ -269,7 +263,7 @@ export const AttendantSurface: React.FC = () => {
             setSubmitSuccess(false);
             fetchActiveShift();
           }}
-          className="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl text-sm transition"
+          className="w-full py-2.5 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition"
         >
           Return to Shift Dashboard
         </button>
@@ -279,78 +273,79 @@ export const AttendantSurface: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto space-y-4 pb-16">
-      {/* Shift Banner */}
-      <div className="bg-gradient-to-r from-slate-800 to-slate-800/80 p-4 rounded-2xl border border-slate-700 flex flex-wrap items-center justify-between gap-4">
+      {/* Shift Banner in Clean Light Theme */}
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-            <h2 className="text-lg font-bold text-white">
-              Shift #{shiftData?.shift_number || 2} — Active Forecourt
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <h2 className="text-lg font-bold text-slate-900">
+              Shift #{shiftData?.shift_number || 1} — Active Forecourt
             </h2>
-            <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+            <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
               {shiftData?.status}
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            Attendant: <strong>Raju Yadav</strong> • Business Date: {shiftData?.business_date}
+          <p className="text-xs text-slate-500 mt-1">
+            Attendant: <strong>Raju Yadav</strong> • SK Petroleum (Indian Oil), Gadhiya • Date:{' '}
+            {shiftData?.business_date}
           </p>
         </div>
 
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <span className="text-xs text-slate-400 block">Calculated Shift Sales</span>
-            <span className="text-xl font-extrabold text-emerald-400 font-mono">
+            <span className="text-xs text-slate-500 block">Calculated Shift Sales</span>
+            <span className="text-xl font-extrabold text-blue-900 font-mono">
               ₹{(totalSalesPaise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </span>
           </div>
-          <div className="text-right border-l border-slate-700 pl-4">
-            <span className="text-xs text-slate-400 block">Total Volume</span>
-            <span className="text-xl font-extrabold text-blue-400 font-mono">{totalLitresSold} L</span>
+          <div className="text-right border-l border-slate-200 pl-4">
+            <span className="text-xs text-slate-500 block">Total Volume</span>
+            <span className="text-xl font-extrabold text-orange-600 font-mono">{totalLitresSold} L</span>
           </div>
         </div>
       </div>
 
       {/* Navigation tabs */}
-      <div className="grid grid-cols-3 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+      <div className="grid grid-cols-3 gap-2 bg-slate-200/80 p-1.5 rounded-2xl border border-slate-200">
         <button
           onClick={() => setActiveTab('readings')}
-          className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
             activeTab === 'readings'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-white text-blue-900 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Fuel className="w-4 h-4" />
+          <Fuel className="w-4 h-4 text-blue-800" />
           <span>1. Nozzle Readings</span>
         </button>
 
         <button
           onClick={() => setActiveTab('tenders')}
-          className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
             activeTab === 'tenders'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-white text-orange-700 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Coins className="w-4 h-4" />
+          <Coins className="w-4 h-4 text-orange-600" />
           <span>2. Cash & Tenders</span>
         </button>
 
         <button
           onClick={() => setActiveTab('review')}
-          className={`py-2 px-3 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 ${
+          className={`py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 ${
             activeTab === 'review'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-              : 'text-slate-400 hover:text-white'
+              ? 'bg-white text-emerald-800 shadow-xs'
+              : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Calculator className="w-4 h-4" />
+          <Calculator className="w-4 h-4 text-emerald-700" />
           <span>3. Reconcile & Close</span>
         </button>
       </div>
 
       {errorMsg && (
-        <div className="p-3 bg-red-500/20 border border-red-500/40 rounded-xl text-red-300 text-xs flex items-center gap-2">
+        <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
@@ -367,26 +362,26 @@ export const AttendantSurface: React.FC = () => {
                 <div
                   key={n.nozzle_id}
                   onClick={() => setFocusedField({ type: 'reading', id: n.nozzle_id })}
-                  className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                  className={`p-4 rounded-2xl border transition-all cursor-pointer ${
                     isSelected
-                      ? 'bg-slate-800/90 border-blue-500 ring-2 ring-blue-500/20 shadow-lg'
-                      : 'bg-slate-800/50 border-slate-700/80 hover:bg-slate-800'
+                      ? 'bg-white border-blue-600 ring-2 ring-blue-500/20 shadow-md'
+                      : 'bg-white border-slate-200 hover:border-slate-300 shadow-xs'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <span className="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center text-xs font-bold text-white">
+                      <span className="w-7 h-7 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 flex items-center justify-center text-xs font-extrabold">
                         #{n.nozzle_number}
                       </span>
                       <div>
-                        <span className="text-sm font-bold text-white">
+                        <span className="text-sm font-bold text-slate-900">
                           MPD {n.dispenser_number} — {n.product_name}
                         </span>
                         <span
                           className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-extrabold ${
                             n.product_code === 'MS'
-                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                              : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                              ? 'bg-blue-50 text-blue-800 border border-blue-200'
+                              : 'bg-orange-50 text-orange-800 border border-orange-200'
                           }`}
                         >
                           {n.product_code} @ ₹{(n.current_price_paise / 100).toFixed(2)}/L
@@ -395,38 +390,38 @@ export const AttendantSurface: React.FC = () => {
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs text-slate-400 block">Sale Amount</span>
-                      <span className="text-base font-bold text-emerald-400 font-mono">
+                      <span className="text-xs text-slate-500 block">Sale Amount</span>
+                      <span className="text-base font-extrabold text-blue-900 font-mono">
                         ₹{(calc.amountPaise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-700/60 text-xs">
+                  <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-slate-100 text-xs">
                     <div>
-                      <span className="text-slate-400 block text-[11px]">Opening Totalizer</span>
-                      <span className="font-mono text-slate-200 font-semibold text-sm">
+                      <span className="text-slate-500 block text-[11px]">Opening Totalizer</span>
+                      <span className="font-mono text-slate-800 font-bold text-sm">
                         {n.opening_reading.toFixed(2)}
                       </span>
                     </div>
 
                     <div>
-                      <span className="text-blue-400 block text-[11px] font-medium">Closing Reading *</span>
+                      <span className="text-blue-900 block text-[11px] font-bold">Closing Reading *</span>
                       <input
                         type="text"
                         readOnly
                         value={n.closing_reading}
-                        className="w-full bg-slate-900 border border-blue-500/60 rounded px-2 py-1 font-mono text-white font-bold text-sm focus:outline-none"
+                        className="w-full bg-slate-50 border border-blue-400 rounded-lg px-2 py-1 font-mono text-slate-900 font-extrabold text-sm focus:outline-none"
                       />
                     </div>
 
                     <div>
-                      <span className="text-slate-400 block text-[11px]">Net Volume</span>
-                      <span className="font-mono text-blue-400 font-bold text-sm">{calc.net} Litres</span>
+                      <span className="text-slate-500 block text-[11px]">Net Volume</span>
+                      <span className="font-mono text-orange-600 font-extrabold text-sm">{calc.net} Litres</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between mt-2 pt-2 text-[11px] text-slate-400">
+                  <div className="flex items-center justify-between mt-2 pt-2 text-[11px] text-slate-500">
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
                         type="checkbox"
@@ -439,7 +434,7 @@ export const AttendantSurface: React.FC = () => {
                             )
                           );
                         }}
-                        className="rounded bg-slate-900 border-slate-600 text-blue-600"
+                        className="rounded border-slate-300 text-blue-800 focus:ring-blue-500"
                       />
                       <span>Meter Rolled Over (0-loop)</span>
                     </label>
@@ -457,7 +452,7 @@ export const AttendantSurface: React.FC = () => {
                             )
                           )
                         }
-                        className="w-12 bg-slate-900 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-xs text-white"
+                        className="w-12 bg-slate-50 border border-slate-300 rounded px-1.5 py-0.5 text-right font-mono text-xs text-slate-900"
                       />
                       <span>L</span>
                     </div>
@@ -469,7 +464,7 @@ export const AttendantSurface: React.FC = () => {
             <div className="pt-2">
               <button
                 onClick={() => setActiveTab('tenders')}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+                className="w-full py-3 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm"
               >
                 <span>Proceed to Cash & Tenders</span>
                 <ArrowRight className="w-4 h-4" />
@@ -477,14 +472,14 @@ export const AttendantSurface: React.FC = () => {
             </div>
           </div>
 
-          {/* TOUCH NUMERIC KEYPAD */}
-          <div className="bg-slate-800/70 p-4 rounded-2xl border border-slate-700 h-fit space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-700">
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                <Calculator className="w-4 h-4 text-blue-400" />
-                Forecourt Touchpad
+          {/* TOUCH NUMERIC KEYPAD IN LIGHT THEME */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm h-fit space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Calculator className="w-4 h-4 text-blue-800" />
+                Touch Numeric Keypad
               </span>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-[11px] text-slate-500">
                 {focusedField ? `Editing #${focusedField.id.slice(-4)}` : 'Select a field'}
               </span>
             </div>
@@ -494,10 +489,10 @@ export const AttendantSurface: React.FC = () => {
                 <button
                   key={key}
                   onClick={() => handleKeypadPress(key)}
-                  className={`h-12 rounded-xl font-mono text-lg font-bold transition-all active:scale-95 flex items-center justify-center ${
+                  className={`h-12 rounded-xl font-mono text-lg font-bold transition active:scale-95 flex items-center justify-center ${
                     key === 'DEL'
-                      ? 'bg-red-500/20 text-red-300 border border-red-500/30 hover:bg-red-500/30'
-                      : 'bg-slate-700/80 text-white border border-slate-600 hover:bg-slate-700'
+                      ? 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100'
+                      : 'bg-white hover:bg-slate-100 text-slate-900 border border-slate-200 shadow-xs'
                   }`}
                 >
                   {key}
@@ -507,7 +502,7 @@ export const AttendantSurface: React.FC = () => {
 
             <button
               onClick={() => handleKeypadPress('CLR')}
-              className="w-full py-2 bg-slate-700/40 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg text-xs font-semibold"
+              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"
             >
               Clear Input
             </button>
@@ -519,13 +514,13 @@ export const AttendantSurface: React.FC = () => {
       {activeTab === 'tenders' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Denomination Counter */}
-          <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700 space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-700">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2">
-                <Coins className="w-4 h-4 text-amber-400" />
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                <Coins className="w-4 h-4 text-orange-600" />
                 Physical Cash Denomination Count
               </h3>
-              <span className="text-xs font-mono font-bold text-emerald-400">
+              <span className="text-xs font-mono font-bold text-blue-900">
                 ₹{(countedCashPaise / 100).toLocaleString('en-IN')}
               </span>
             </div>
@@ -543,10 +538,10 @@ export const AttendantSurface: React.FC = () => {
                 const count = denominations[item.key as keyof typeof denominations] || 0;
                 const total = count * item.mult;
                 return (
-                  <div key={item.key} className="flex items-center justify-between bg-slate-900/60 p-2 rounded-lg">
-                    <span className="font-medium text-slate-300 w-28">{item.label}</span>
+                  <div key={item.key} className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                    <span className="font-semibold text-slate-700 w-28">{item.label}</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400 text-[10px]">×</span>
+                      <span className="text-slate-400 text-xs">×</span>
                       <input
                         type="number"
                         min="0"
@@ -554,10 +549,10 @@ export const AttendantSurface: React.FC = () => {
                         onChange={(e) =>
                           setDenominations((prev) => ({ ...prev, [item.key]: Number(e.target.value) || 0 }))
                         }
-                        className="w-16 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-right font-mono text-xs text-white"
+                        className="w-16 bg-white border border-slate-300 rounded-lg px-2 py-1 text-right font-mono text-xs text-slate-900 font-bold"
                       />
                     </div>
-                    <span className="font-mono font-semibold text-slate-200 w-24 text-right">
+                    <span className="font-mono font-bold text-slate-900 w-24 text-right">
                       = ₹{total.toLocaleString('en-IN')}
                     </span>
                   </div>
@@ -568,85 +563,85 @@ export const AttendantSurface: React.FC = () => {
 
           {/* Digital & Non-Cash Tenders */}
           <div className="space-y-4">
-            <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700 space-y-3">
-              <h3 className="font-bold text-sm text-white flex items-center gap-2 pb-2 border-b border-slate-700">
-                <CreditCard className="w-4 h-4 text-blue-400" />
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                <CreditCard className="w-4 h-4 text-blue-800" />
                 Digital & Khata Tenders (₹)
               </h3>
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-slate-300">
-                    <QrCode className="w-3.5 h-3.5 text-emerald-400" /> UPI (PhonePe / GPay / Paytm)
+                  <span className="flex items-center gap-1.5 text-slate-700 font-medium">
+                    <QrCode className="w-3.5 h-3.5 text-blue-800" /> UPI (PhonePe / GPay / Paytm)
                   </span>
                   <input
                     type="number"
                     value={upiAmount}
                     onChange={(e) => setUpiAmount(e.target.value)}
-                    className="w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-right font-mono text-white text-xs"
+                    className="w-28 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-right font-mono text-slate-900 font-bold text-xs"
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-slate-300">
-                    <CreditCard className="w-3.5 h-3.5 text-blue-400" /> POS Card Swipe
+                  <span className="flex items-center gap-1.5 text-slate-700 font-medium">
+                    <CreditCard className="w-3.5 h-3.5 text-orange-600" /> POS Card Swipe
                   </span>
                   <input
                     type="number"
                     value={cardAmount}
                     onChange={(e) => setCardAmount(e.target.value)}
-                    className="w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-right font-mono text-white text-xs"
+                    className="w-28 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-right font-mono text-slate-900 font-bold text-xs"
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-slate-300">
-                    <Truck className="w-3.5 h-3.5 text-purple-400" /> Customer Credit / Khata Slips
+                  <span className="flex items-center gap-1.5 text-slate-700 font-medium">
+                    <Truck className="w-3.5 h-3.5 text-indigo-700" /> Customer Credit / Khata Slips
                   </span>
                   <input
                     type="number"
                     value={creditAmount}
                     onChange={(e) => setCreditAmount(e.target.value)}
-                    className="w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-right font-mono text-white text-xs"
+                    className="w-28 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-right font-mono text-slate-900 font-bold text-xs"
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300">Indian Oil XTRAPOWER Fleet Card</span>
+                  <span className="text-slate-700 font-medium">Indian Oil XTRAPOWER Fleet Card</span>
                   <input
                     type="number"
                     value={fleetAmount}
                     onChange={(e) => setFleetAmount(e.target.value)}
-                    className="w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-right font-mono text-white text-xs"
+                    className="w-28 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-right font-mono text-slate-900 font-bold text-xs"
                   />
                 </div>
               </div>
             </div>
 
             {/* Mid-shift drops & expenses */}
-            <div className="bg-slate-800/60 p-4 rounded-2xl border border-slate-700 space-y-3">
-              <h3 className="font-bold text-sm text-white pb-2 border-b border-slate-700">
+            <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <h3 className="font-bold text-sm text-slate-900 pb-2 border-b border-slate-100">
                 Cash Drops & Expenses from Cash (₹)
               </h3>
 
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300">Cash Drops to Manager Safe</span>
+                  <span className="text-slate-700 font-medium">Cash Drops to Manager Safe</span>
                   <input
                     type="number"
                     value={cashDropAmount}
                     onChange={(e) => setCashDropAmount(e.target.value)}
-                    className="w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-right font-mono text-white text-xs"
+                    className="w-28 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-right font-mono text-slate-900 font-bold text-xs"
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-300">Forecourt Operating Expenses</span>
+                  <span className="text-slate-700 font-medium">Forecourt Operating Expenses</span>
                   <input
                     type="number"
                     value={expenseAmount}
                     onChange={(e) => setExpenseAmount(e.target.value)}
-                    className="w-28 bg-slate-900 border border-slate-700 rounded px-2 py-1.5 text-right font-mono text-white text-xs"
+                    className="w-28 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1.5 text-right font-mono text-slate-900 font-bold text-xs"
                   />
                 </div>
               </div>
@@ -654,7 +649,7 @@ export const AttendantSurface: React.FC = () => {
 
             <button
               onClick={() => setActiveTab('review')}
-              className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20"
+              className="w-full py-3 bg-blue-800 hover:bg-blue-700 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-sm"
             >
               <span>Review Reconciliation</span>
               <ArrowRight className="w-4 h-4" />
@@ -666,48 +661,48 @@ export const AttendantSurface: React.FC = () => {
       {/* TAB 3: REVIEW & CLOSE */}
       {activeTab === 'review' && (
         <div className="space-y-4">
-          <div className="bg-slate-800/80 p-5 rounded-2xl border border-slate-700 space-y-4">
-            <h3 className="font-bold text-base text-white border-b border-slate-700 pb-3 flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-indigo-400" />
+          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <h3 className="font-bold text-base text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-blue-800" />
               Shift Balance & Variance Reconciliation
             </h3>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-              <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                <span className="text-slate-400 block">Total Meter Sales</span>
-                <span className="text-base font-extrabold text-white font-mono mt-1 block">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-slate-500 block">Total Meter Sales</span>
+                <span className="text-base font-extrabold text-slate-900 font-mono mt-1 block">
                   ₹{(totalSalesPaise / 100).toLocaleString('en-IN')}
                 </span>
               </div>
 
-              <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                <span className="text-slate-400 block">Digital & Credit</span>
-                <span className="text-base font-extrabold text-blue-400 font-mono mt-1 block">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-slate-500 block">Digital & Credit</span>
+                <span className="text-base font-extrabold text-blue-900 font-mono mt-1 block">
                   ₹{(nonCashTendersPaise / 100).toLocaleString('en-IN')}
                 </span>
               </div>
 
-              <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                <span className="text-slate-400 block">Expected Cash</span>
-                <span className="text-base font-extrabold text-amber-400 font-mono mt-1 block">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-slate-500 block">Expected Cash</span>
+                <span className="text-base font-extrabold text-orange-600 font-mono mt-1 block">
                   ₹{(expectedCashPaise / 100).toLocaleString('en-IN')}
                 </span>
               </div>
 
-              <div className="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                <span className="text-slate-400 block">Counted Cash + Drops</span>
-                <span className="text-base font-extrabold text-emerald-400 font-mono mt-1 block">
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <span className="text-slate-500 block">Counted Cash + Drops</span>
+                <span className="text-base font-extrabold text-emerald-700 font-mono mt-1 block">
                   ₹{(actualCashPaise / 100).toLocaleString('en-IN')}
                 </span>
               </div>
             </div>
 
-            {/* VARIANCE HIGHLIGHT BOX */}
+            {/* VARIANCE HIGHLIGHT BOX IN LIGHT THEME */}
             <div
               className={`p-4 rounded-xl border flex items-center justify-between ${
                 Math.abs(cashVarianceRupees) <= 200
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
-                  : 'bg-amber-500/15 border-amber-500/40 text-amber-300'
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
+                  : 'bg-amber-50 border-amber-300 text-amber-900'
               }`}
             >
               <div>
@@ -723,7 +718,7 @@ export const AttendantSurface: React.FC = () => {
                 <span className="text-2xl font-black font-mono">
                   {cashVarianceRupees >= 0 ? `+₹${cashVarianceRupees.toFixed(2)}` : `-₹${Math.abs(cashVarianceRupees).toFixed(2)}`}
                 </span>
-                <span className="block text-[11px] font-semibold">
+                <span className="block text-[11px] font-bold">
                   {cashVarianceRupees === 0 ? 'Exact Match' : cashVarianceRupees > 0 ? 'Cash Excess' : 'Cash Shortage'}
                 </span>
               </div>
@@ -731,12 +726,12 @@ export const AttendantSurface: React.FC = () => {
 
             {/* Explanation Input */}
             <div className="space-y-1.5 text-xs">
-              <label className="font-semibold text-slate-300 block">Attendant Shift Note & Explanation</label>
+              <label className="font-bold text-slate-700 block">Attendant Shift Note & Explanation</label>
               <textarea
                 value={varianceReason}
                 onChange={(e) => setVarianceReason(e.target.value)}
                 placeholder="Explain any meter reset, coins shortage, or customer credit voucher specifics..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-blue-500"
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-slate-900 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                 rows={2}
               />
             </div>
@@ -745,7 +740,7 @@ export const AttendantSurface: React.FC = () => {
             <button
               onClick={handleSubmitClose}
               disabled={submitting}
-              className="w-full py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold rounded-xl text-sm transition shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full py-3.5 bg-blue-800 hover:bg-blue-700 text-white font-extrabold rounded-xl text-sm transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50"
             >
               <Send className="w-4 h-4" />
               <span>{submitting ? 'Submitting Shift...' : 'Submit Shift Close for Manager Approval'}</span>

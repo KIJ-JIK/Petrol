@@ -1,14 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { offlineStore, SyncState } from '../offline/offline-store';
-import { Wifi, WifiOff, RefreshCw, Fuel, Shield, User, Clock, IndianRupee } from 'lucide-react';
+import {
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  Fuel,
+  Shield,
+  User,
+  IndianRupee,
+  Home,
+  LogOut,
+  MapPin,
+} from 'lucide-react';
 
 interface HeaderProps {
   currentRole: 'attendant' | 'manager' | 'owner' | 'accountant';
   onRoleChange: (role: 'attendant' | 'manager' | 'owner' | 'accountant') => void;
   currentUser: string;
+  onGoToLanding: () => void;
+  onSignOut: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentRole, onRoleChange, currentUser }) => {
+export const Header: React.FC<HeaderProps> = ({
+  currentRole,
+  onRoleChange,
+  currentUser,
+  onGoToLanding,
+  onSignOut,
+}) => {
   const [syncState, setSyncState] = useState<{ state: SyncState; pendingCount: number }>({
     state: 'ONLINE_SYNCED',
     pendingCount: 0,
@@ -36,52 +55,67 @@ export const Header: React.FC<HeaderProps> = ({ currentRole, onRoleChange, curre
   };
 
   return (
-    <header className="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-50 px-4 py-3">
+    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-4 py-3 shadow-xs">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
         {/* Brand & Outlet details */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-500 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <button
+              onClick={onGoToLanding}
+              title="Return to Public Landing Page"
+              className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-800 to-orange-500 flex items-center justify-center shadow-xs hover:opacity-90 transition cursor-pointer"
+            >
               <Fuel className="w-5 h-5 text-white" />
-            </div>
+            </button>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-bold text-base tracking-tight text-white flex items-center gap-1.5">
+                <button
+                  onClick={onGoToLanding}
+                  className="font-extrabold text-base tracking-tight text-slate-900 hover:text-blue-800 transition text-left"
+                >
                   SK Petroleum
-                </h1>
-                <span className="px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                </button>
+                <span className="px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded bg-orange-100 text-orange-700 border border-orange-200">
                   Indian Oil (IOCL) • Gadhiya
                 </span>
               </div>
-              <p className="text-xs text-slate-400">Gadhiya, Gujarat • GST: 24AABCS1429B1Z1</p>
+              <p className="text-xs text-slate-500 flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-slate-400" />
+                Gadhiya, Gujarat • GST: 24AABCS1429B1Z1
+              </p>
             </div>
           </div>
 
-          {/* Mobile sync indicator */}
+          {/* Quick Landing Page Link for mobile */}
           <div className="md:hidden flex items-center gap-2">
             <button
-              onClick={toggleOfflineSimulation}
-              className={`p-1.5 rounded-lg border text-xs flex items-center gap-1 ${
-                isOfflineSim
-                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                  : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-              }`}
+              onClick={onGoToLanding}
+              className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 text-xs font-semibold"
             >
-              {isOfflineSim ? <WifiOff className="w-4 h-4" /> : <Wifi className="w-4 h-4" />}
+              <Home className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Center / Right controls */}
         <div className="flex items-center flex-wrap gap-2.5 w-full md:w-auto justify-end">
+          {/* Landing button */}
+          <button
+            onClick={onGoToLanding}
+            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition"
+          >
+            <Home className="w-3.5 h-3.5 text-slate-500" />
+            <span>Landing Page</span>
+          </button>
+
           {/* Offline / Online Simulator Badge */}
-          <div className="flex items-center gap-2 bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700">
+          <div className="flex items-center gap-2 bg-slate-100 px-2.5 py-1.5 rounded-xl border border-slate-200">
             <button
               onClick={toggleOfflineSimulation}
-              className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold transition-all ${
                 isOfflineSim
-                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:bg-amber-500/30'
-                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30'
+                  ? 'bg-amber-100 text-amber-800 border border-amber-300 hover:bg-amber-200'
+                  : 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
               }`}
               title="Click to simulate forecourt network disconnection"
             >
@@ -103,27 +137,27 @@ export const Header: React.FC<HeaderProps> = ({ currentRole, onRoleChange, curre
               <button
                 onClick={triggerManualSync}
                 disabled={isOfflineSim || isSyncing}
-                className="flex items-center gap-1.5 px-2 py-1 bg-amber-600/30 text-amber-300 border border-amber-500/40 rounded text-xs font-medium hover:bg-amber-600/40 disabled:opacity-50"
+                className="flex items-center gap-1.5 px-2 py-1 bg-amber-200 text-amber-900 border border-amber-300 rounded-lg text-xs font-bold hover:bg-amber-300 disabled:opacity-50"
               >
                 <RefreshCw className={`w-3 h-3 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span>{syncState.pendingCount} Queued</span>
               </button>
             ) : (
-              <span className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="flex items-center gap-1 text-[11px] text-slate-600 font-semibold">
+                <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                 All Synced
               </span>
             )}
           </div>
 
-          {/* Role Switcher Tabs */}
-          <div className="bg-slate-950 p-1 rounded-xl border border-slate-800 flex items-center">
+          {/* Role Switcher Tabs in Light Theme */}
+          <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center">
             <button
               onClick={() => onRoleChange('attendant')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 currentRole === 'attendant'
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-blue-800 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Fuel className="w-3.5 h-3.5" />
@@ -132,10 +166,10 @@ export const Header: React.FC<HeaderProps> = ({ currentRole, onRoleChange, curre
 
             <button
               onClick={() => onRoleChange('manager')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 currentRole === 'manager'
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-orange-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <Shield className="w-3.5 h-3.5" />
@@ -144,10 +178,10 @@ export const Header: React.FC<HeaderProps> = ({ currentRole, onRoleChange, curre
 
             <button
               onClick={() => onRoleChange('owner')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 currentRole === 'owner'
-                  ? 'bg-amber-600 text-white shadow-md shadow-amber-500/25'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-slate-800 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <User className="w-3.5 h-3.5" />
@@ -156,16 +190,25 @@ export const Header: React.FC<HeaderProps> = ({ currentRole, onRoleChange, curre
 
             <button
               onClick={() => onRoleChange('accountant')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 currentRole === 'accountant'
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/25'
-                  : 'text-slate-400 hover:text-slate-200'
+                  ? 'bg-emerald-700 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               <IndianRupee className="w-3.5 h-3.5" />
               <span>Accountant</span>
             </button>
           </div>
+
+          {/* User Sign Out / Switch */}
+          <button
+            onClick={onSignOut}
+            title="Sign out or switch active staff"
+            className="p-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-red-50 hover:text-red-700 hover:border-red-200 text-slate-600 transition"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </header>
