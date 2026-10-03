@@ -1,0 +1,9 @@
+TLS in transit; encryption at rest; managed secrets and key rotation.
+Tenant/outlet scope enforced server-side, not only by client filtering.
+MFA for privileged users and session/device revocation.
+Append-only audit history for financial and access changes.
+Payment card data remains with certified payment provider.
+Minimize personal data; define retention, access and deletion policies with counsel.
+Daily backups and point-in-time recovery; test restoration.
+Define service availability, RPO and RTO with pilot customers before making commitments.
+Keep PII and payment secrets out of logs; use correlation IDs.

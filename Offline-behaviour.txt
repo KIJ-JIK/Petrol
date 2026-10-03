@@ -1,0 +1,7 @@
+Cache only the minimum configuration and assigned work needed for the shift.
+Queue input as local events with device event time, actor, local ID and idempotency key.
+Show unsynced, syncing, synced and conflict states.
+On reconnect, server validates current permissions and record state.
+Conflicting readings or financial changes become review tasks.
+Do not use silent last-write-wins for meter readings, cash, credit, approvals or ledger data.
+Provide explicit device logout and local data expiry.

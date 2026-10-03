@@ -1,0 +1,8 @@
+Every integration is an adapter with:
+- Provider identity and connection state.
+- Versioned mapping/configuration.
+- Import job, original source file/reference and checksum.
+- Idempotent processing and duplicate detection.
+- Human review for uncertain matches.
+- Error report and retry mechanism.
+- Audit trail of accepted mapping and posting.

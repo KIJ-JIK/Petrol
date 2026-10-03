@@ -1,0 +1,9 @@
+Choose final stack based on the team’s existing expertise. Suggested defaults:
+- Frontend: TypeScript + React responsive PWA.
+- Offline storage: IndexedDB for minimum required queued records; service worker for app shell.
+- Backend: TypeScript API (NestJS/Fastify) or established team stack.
+- Database: PostgreSQL with tenant/outlet authorization and transactional posting.
+- Queue: managed queue for imports, alerts and reports.
+- Files: encrypted object storage with signed URLs and scanning.
+- Identity: managed OIDC provider; MFA for privileged users.
+- Deployment: managed containers/database, separate staging and production, infrastructure as code.

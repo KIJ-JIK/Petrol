@@ -1,0 +1,8 @@
+Client submits meter/tender inputs with an idempotency key.
+API validates tenant/outlet, shift state, role, unit and reading constraints.
+Domain layer calculates litres and amounts using versioned rules.
+Database transaction stores submitted readings and reconciliation result.
+Manager approval records approval event.
+Posting transaction creates stock movements and balanced journal lines.
+Outbox event queues reports/notifications without making posting dependent on email.
+Reports read approved/posting data and link to underlying source records.
