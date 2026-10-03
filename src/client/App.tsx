@@ -16,6 +16,8 @@ import { BankReconciliation } from './components/BankReconciliation';
 import { OperationalQuality } from './components/OperationalQuality';
 import { MasterSettings } from './components/MasterSettings';
 import { CommunicationCenter } from './components/CommunicationCenter';
+import { MobileBottomNav, AppModule } from './components/MobileBottomNav';
+import { MobileMoreDrawer } from './components/MobileMoreDrawer';
 import {
   Fuel,
   Users,
@@ -35,11 +37,10 @@ export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'portal'>('landing');
   const [currentRole, setCurrentRole] = useState<'attendant' | 'manager' | 'owner' | 'accountant'>('attendant');
   const [currentUser, setCurrentUser] = useState<string>('Raju Yadav (Forecourt Attendant 1)');
-  const [activeModule, setActiveModule] = useState<
-    'forecourt' | 'customer' | 'accounting' | 'reports' | 'payroll' | 'billing' | 'reconciliation' | 'quality' | 'masters' | 'communications'
-  >('forecourt');
+  const [activeModule, setActiveModule] = useState<AppModule>('forecourt');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isBackupOpen, setIsBackupOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   // Quick role names map
@@ -93,8 +94,8 @@ export const App: React.FC = () => {
             onSignOut={handleSignOut}
           />
 
-          {/* Module Navigation Bar in Light Theme */}
-          <div className="bg-white border-b border-slate-200 px-4 py-2 sticky top-[65px] z-30 shadow-2xs">
+          {/* Module Navigation Bar in Light Theme (Desktop only) */}
+          <div className="hidden md:block bg-white border-b border-slate-200 px-4 py-2 sticky top-[65px] z-30 shadow-2xs">
             <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2">
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
@@ -229,7 +230,7 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
+          <main className="flex-1 p-3 md:p-6 max-w-7xl mx-auto w-full pb-24 md:pb-6">
             {activeModule === 'forecourt' && (
               <>
                 {currentRole === 'attendant' && <AttendantSurface />}
@@ -250,7 +251,31 @@ export const App: React.FC = () => {
             {activeModule === 'communications' && <CommunicationCenter />}
           </main>
 
-          <footer className="border-t border-slate-200 bg-white py-4 px-4 text-center text-xs text-slate-500 mt-auto shadow-xs">
+          {/* MOBILE BOTTOM NAVIGATION BAR */}
+          <MobileBottomNav
+            activeModule={activeModule}
+            onSelectModule={(mod) => {
+              setActiveModule(mod);
+              setIsMoreOpen(false);
+            }}
+            onOpenMore={() => setIsMoreOpen(true)}
+            isMoreOpen={isMoreOpen}
+          />
+
+          {/* MOBILE 'MORE' BOTTOM DRAWER */}
+          <MobileMoreDrawer
+            isOpen={isMoreOpen}
+            onClose={() => setIsMoreOpen(false)}
+            activeModule={activeModule}
+            onSelectModule={setActiveModule}
+            currentRole={currentRole}
+            onRoleChange={handleRoleChange}
+            currentUser={currentUser}
+            onOpenBackup={() => setIsBackupOpen(true)}
+            onSignOut={handleSignOut}
+          />
+
+          <footer className="hidden md:block border-t border-slate-200 bg-white py-4 px-4 text-center text-xs text-slate-500 mt-auto shadow-xs">
             <p className="font-semibold text-slate-700">
               SK Petroleum — Indian Oil Corporation Ltd (IOCL) Retail Outlet
             </p>

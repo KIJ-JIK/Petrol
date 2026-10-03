@@ -55,8 +55,77 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-4 py-3 shadow-xs">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40 px-3 md:px-4 py-2 md:py-3 shadow-xs">
+      {/* MOBILE COMPACT HEADER (md:hidden) */}
+      <div className="flex md:hidden items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onGoToLanding}
+            title="Return to Public Landing Page"
+            className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-800 to-orange-500 flex items-center justify-center shadow-xs"
+          >
+            <Fuel className="w-4 h-4 text-white" />
+          </button>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-extrabold text-sm tracking-tight text-slate-900">SK Petroleum</span>
+              <span className="px-1 py-0.2 text-[9px] font-extrabold uppercase rounded bg-orange-100 text-orange-700">
+                IOCL
+              </span>
+            </div>
+            <p className="text-[10px] text-slate-500 flex items-center gap-0.5">
+              <MapPin className="w-2.5 h-2.5 text-slate-400" />
+              Gadhiya, Gujarat
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          {/* Quick Sync / Connectivity Pill */}
+          <button
+            onClick={toggleOfflineSimulation}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+              isOfflineSim
+                ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+            }`}
+          >
+            {isOfflineSim ? (
+              <>
+                <WifiOff className="w-3 h-3 text-amber-700" />
+                <span>Offline</span>
+              </>
+            ) : (
+              <>
+                <Wifi className="w-3 h-3 text-emerald-600" />
+                <span>Online</span>
+              </>
+            )}
+            {syncState.pendingCount > 0 && (
+              <span className="ml-0.5 px-1 rounded-full bg-amber-500 text-white text-[9px] font-black">
+                {syncState.pendingCount}
+              </span>
+            )}
+          </button>
+
+          {/* Active Role Pill */}
+          <span className="px-2 py-1 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-[10px] font-extrabold capitalize">
+            {currentRole}
+          </span>
+
+          {/* Quick Sign Out / User Switch */}
+          <button
+            onClick={onSignOut}
+            title="Sign out or switch user"
+            className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* DESKTOP FULL HEADER (hidden md:flex) */}
+      <div className="hidden md:flex max-w-7xl mx-auto flex-col md:flex-row items-center justify-between gap-3">
         {/* Brand & Outlet details */}
         <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
           <div className="flex items-center gap-2.5">
@@ -84,16 +153,6 @@ export const Header: React.FC<HeaderProps> = ({
                 Gadhiya, Gujarat • GST: 24AABCS1429B1Z1
               </p>
             </div>
-          </div>
-
-          {/* Quick Landing Page Link for mobile */}
-          <div className="md:hidden flex items-center gap-2">
-            <button
-              onClick={onGoToLanding}
-              className="p-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 text-xs font-semibold"
-            >
-              <Home className="w-4 h-4" />
-            </button>
           </div>
         </div>
 

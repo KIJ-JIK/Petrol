@@ -1,0 +1,19 @@
+{
+  "name": "SK Petroleum — Indian Oil (IOCL)",
+  "short_name": "SK Petroleum",
+  "description": "Retail Forecourt Automation & Khata Management for SK Petroleum, Gadhiya (IOCL)",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f3b7a",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"]
+}
