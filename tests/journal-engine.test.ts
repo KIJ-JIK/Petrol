@@ -51,7 +51,65 @@ describe('JournalEngine', () => {
 
     expect(debits).toBe(credits);
     expect(debits).toBe(115000000);
-    expect(entry.voucher_number).toBe('JV-DEL-INV-HPCL-9874');
+    expect(entry.voucher_number).toBe('JV-PURCHASE-INV-HPCL-9874');
+  });
+
+  it('creates balanced expense & payment voucher (Voucher 4)', () => {
+    const { entry, lines } = JournalEngine.createPaymentVoucher({
+      outlet_id: 'out1',
+      voucher_date: '2026-10-03',
+      vendor_name: 'Gujarat Electricity Board (GETCO)',
+      expense_category: 'Electricity',
+      amount_paise: 2450000, // ₹24,500
+      paid_from: 'BANK',
+      narration: 'Monthly forecourt HT power tariff payment',
+    });
+
+    const debits = lines.reduce((acc, l) => acc + l.debit_paise, 0);
+    const credits = lines.reduce((acc, l) => acc + l.credit_paise, 0);
+
+    expect(debits).toBe(credits);
+    expect(debits).toBe(2450000);
+    expect(entry.voucher_number).toContain('PV-PAYMENT-');
+  });
+
+  it('creates balanced banking contra voucher (Voucher 5)', () => {
+    const { entry, lines } = JournalEngine.createContraBankingVoucher({
+      outlet_id: 'out1',
+      voucher_date: '2026-10-03',
+      transaction_type: 'CASH_DEPOSIT',
+      bank_name: 'SBI IOCL Current Account',
+      amount_paise: 50000000, // ₹5,00,000 cash deposit
+      reference_no: 'SBI-CHQ-10492',
+      narration: 'Cash deposit into current account',
+    });
+
+    const debits = lines.reduce((acc, l) => acc + l.debit_paise, 0);
+    const credits = lines.reduce((acc, l) => acc + l.credit_paise, 0);
+
+    expect(debits).toBe(credits);
+    expect(debits).toBe(50000000);
+    expect(entry.voucher_number).toContain('CV-BANKING-');
+  });
+
+  it('creates balanced debit/credit adjustment voucher (Voucher 6)', () => {
+    const { entry, lines } = JournalEngine.createAdjustmentVoucher({
+      outlet_id: 'out1',
+      voucher_date: '2026-10-03',
+      debit_account_code: '5010',
+      debit_account_name: 'Station Operating Expenses',
+      credit_account_code: '1010',
+      credit_account_name: 'Cash in Hand (Forecourt)',
+      amount_paise: 150000, // ₹1,500
+      reason: 'Nozzle calibration verification audit sample',
+    });
+
+    const debits = lines.reduce((acc, l) => acc + l.debit_paise, 0);
+    const credits = lines.reduce((acc, l) => acc + l.credit_paise, 0);
+
+    expect(debits).toBe(credits);
+    expect(debits).toBe(150000);
+    expect(entry.voucher_number).toContain('JV-ADJUSTMENT-');
   });
 
   it('creates balanced customer receipt voucher', () => {

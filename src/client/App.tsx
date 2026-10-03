@@ -6,12 +6,28 @@ import { AttendantSurface } from './components/AttendantSurface';
 import { ManagerSurface } from './components/ManagerSurface';
 import { OwnerSurface } from './components/OwnerSurface';
 import { AccountantSurface } from './components/AccountantSurface';
+import { CustomerPanel } from './components/CustomerPanel';
+import { AccountingVouchers } from './components/AccountingVouchers';
+import { ReportHub } from './components/ReportHub';
+import { StaffPayroll } from './components/StaffPayroll';
+import { DataBackupModal } from './components/DataBackupModal';
+import {
+  Fuel,
+  Users,
+  BookOpen,
+  FileText,
+  Clock,
+  Database,
+  Shield,
+} from 'lucide-react';
 
 export const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<'landing' | 'portal'>('landing');
   const [currentRole, setCurrentRole] = useState<'attendant' | 'manager' | 'owner' | 'accountant'>('attendant');
   const [currentUser, setCurrentUser] = useState<string>('Raju Yadav (Forecourt Attendant 1)');
+  const [activeModule, setActiveModule] = useState<'forecourt' | 'customer' | 'accounting' | 'reports' | 'payroll'>('forecourt');
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isBackupOpen, setIsBackupOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(true);
 
   // Quick role names map
@@ -65,11 +81,96 @@ export const App: React.FC = () => {
             onSignOut={handleSignOut}
           />
 
+          {/* Module Navigation Bar in Light Theme */}
+          <div className="bg-white border-b border-slate-200 px-4 py-2 sticky top-[65px] z-30 shadow-2xs">
+            <div className="max-w-7xl mx-auto flex items-center justify-between overflow-x-auto gap-2">
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => setActiveModule('forecourt')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+                    activeModule === 'forecourt'
+                      ? 'bg-blue-800 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <Fuel className="w-4 h-4" />
+                  <span>Forecourt Shift & Pumps</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveModule('customer')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+                    activeModule === 'customer'
+                      ? 'bg-blue-800 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <Users className="w-4 h-4" />
+                  <span>Customer Panel (Khata)</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveModule('accounting')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+                    activeModule === 'accounting'
+                      ? 'bg-blue-800 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>6-Voucher Hub & P&L</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveModule('reports')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+                    activeModule === 'reports'
+                      ? 'bg-blue-800 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>Reports Hub (40+)</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveModule('payroll')}
+                  className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+                    activeModule === 'payroll'
+                      ? 'bg-blue-800 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <Clock className="w-4 h-4" />
+                  <span>Staff & Payroll</span>
+                </button>
+              </div>
+
+              {/* Instant Backup Button */}
+              <button
+                onClick={() => setIsBackupOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold transition cursor-pointer shrink-0"
+              >
+                <Database className="w-3.5 h-3.5 text-blue-700" />
+                <span>Instant Backup</span>
+              </button>
+            </div>
+          </div>
+
           <main className="flex-1 p-4 md:p-6 max-w-7xl mx-auto w-full">
-            {currentRole === 'attendant' && <AttendantSurface />}
-            {currentRole === 'manager' && <ManagerSurface />}
-            {currentRole === 'owner' && <OwnerSurface />}
-            {currentRole === 'accountant' && <AccountantSurface />}
+            {activeModule === 'forecourt' && (
+              <>
+                {currentRole === 'attendant' && <AttendantSurface />}
+                {currentRole === 'manager' && <ManagerSurface />}
+                {currentRole === 'owner' && <OwnerSurface />}
+                {currentRole === 'accountant' && <AccountantSurface />}
+              </>
+            )}
+
+            {activeModule === 'customer' && <CustomerPanel />}
+            {activeModule === 'accounting' && <AccountingVouchers />}
+            {activeModule === 'reports' && <ReportHub />}
+            {activeModule === 'payroll' && <StaffPayroll />}
           </main>
 
           <footer className="border-t border-slate-200 bg-white py-4 px-4 text-center text-xs text-slate-500 mt-auto shadow-xs">
@@ -88,6 +189,12 @@ export const App: React.FC = () => {
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         onSuccess={handleAuthSuccess}
+      />
+
+      {/* Instant Database Backup Modal */}
+      <DataBackupModal
+        isOpen={isBackupOpen}
+        onClose={() => setIsBackupOpen(false)}
       />
     </div>
   );

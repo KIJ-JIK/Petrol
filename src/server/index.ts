@@ -6,6 +6,10 @@ import { khataRouter } from './routes/khata.js';
 import { financeRouter } from './routes/finance.js';
 import { reportRouter } from './routes/reports.js';
 import { syncRouter } from './routes/sync.js';
+import { vouchersRouter } from './routes/vouchers.js';
+import { payrollRouter } from './routes/payroll.js';
+import { reportsHubRouter } from './routes/reports-hub.js';
+import { backupRouter } from './routes/backup.js';
 import { db } from '../core/database/db.js';
 
 const app = express();
@@ -21,6 +25,10 @@ app.use('/api/v1/parties', khataRouter);
 app.use('/api/v1/finance', financeRouter);
 app.use('/api/v1/reports', reportRouter);
 app.use('/api/v1/sync', syncRouter);
+app.use('/api/v1/vouchers', vouchersRouter);
+app.use('/api/v1/payroll', payrollRouter);
+app.use('/api/v1/reports-hub', reportsHubRouter);
+app.use('/api/v1/backup', backupRouter);
 
 // Health & System status
 app.get('/api/health', (req, res) => {

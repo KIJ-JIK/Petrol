@@ -1,5 +1,6 @@
 import { db, initDatabase } from '../../core/database/db.js';
 import { v4 as uuidv4 } from 'uuid';
+import { JournalEngine } from '../../core/domain/journal-engine.js';
 
 export function seed() {
   initDatabase();
@@ -9,6 +10,11 @@ export function seed() {
   const tables = [
     'sync_queue',
     'audit_events',
+    'banking_transactions',
+    'staff_payroll',
+    'staff_advances',
+    'staff_attendance',
+    'customer_vehicles',
     'journal_lines',
     'journal_entries',
     'receipts',
@@ -191,7 +197,162 @@ export function seed() {
     'Morning Shift Active — SK Petroleum, Gadhiya'
   );
 
-  console.log('✅ Seeding complete: SK Petroleum (Indian Oil), Gadhiya initialized.');
+  // 7. Customers / Khata Parties (Gadhiya Agricultural & Commercial Accounts)
+  const partiesData = [
+    {
+      id: 'pty_gadhiya_kisan',
+      name: 'Gadhiya Kisan Seva Sahakari Mandali',
+      code: 'CUST-KISAN-01',
+      phone: '9825112233',
+      credit_limit_paise: 10000000, // ₹1,00,000
+      payment_terms_days: 15,
+      vehicles: ['GJ-11-AA-4411', 'GJ-11-AA-4412', 'GJ-11-TR-5050'],
+    },
+    {
+      id: 'pty_saurashtra_logistics',
+      name: 'Saurashtra Highway Logistics',
+      code: 'CUST-SHL-02',
+      phone: '9825223344',
+      credit_limit_paise: 25000000, // ₹2,50,000
+      payment_terms_days: 30,
+      vehicles: ['GJ-14-TR-8822', 'GJ-14-TR-8823', 'GJ-14-TR-9901'],
+    },
+    {
+      id: 'pty_panchayat_tractor',
+      name: 'Gadhiya Gram Panchayat Tractor Service',
+      code: 'CUST-GP-03',
+      phone: '9825334455',
+      credit_limit_paise: 5000000, // ₹50,000
+      payment_terms_days: 15,
+      vehicles: ['GJ-11-GP-0099'],
+    },
+  ];
+
+  for (const p of partiesData) {
+    db.prepare(`
+      INSERT INTO parties (id, outlet_id, name, code, phone, credit_limit_paise, current_balance_paise, payment_terms_days, vehicles_json)
+      VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)
+    `).run(p.id, outletId, p.name, p.code, p.phone, p.credit_limit_paise, p.payment_terms_days, JSON.stringify(p.vehicles));
+
+    for (const v of p.vehicles) {
+      db.prepare(`
+        INSERT INTO customer_vehicles (id, party_id, vehicle_no)
+        VALUES (?, ?, ?)
+      `).run(uuidv4(), p.id, v);
+    }
+  }
+
+  // 8. Sample Credit Sales & Collections for Parties
+  const sale1Paise = 1844000; // 200 Litres HSD @ ₹92.20 = ₹18,440
+  db.prepare(`
+    INSERT INTO credit_sales (id, outlet_id, shift_id, party_id, vehicle_no, product_id, litres, rate_paise, total_amount_paise, slip_no)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    uuidv4(),
+    outletId,
+    shiftId,
+    'pty_gadhiya_kisan',
+    'GJ-11-AA-4411',
+    'prod_hsd',
+    200.0,
+    9220,
+    sale1Paise,
+    'SL-10021'
+  );
+  db.prepare('UPDATE parties SET current_balance_paise = current_balance_paise + ? WHERE id = ?').run(sale1Paise, 'pty_gadhiya_kisan');
+
+  const sale2Paise = 2766000; // 300 Litres HSD @ ₹92.20 = ₹27,660
+  db.prepare(`
+    INSERT INTO credit_sales (id, outlet_id, shift_id, party_id, vehicle_no, product_id, litres, rate_paise, total_amount_paise, slip_no)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    uuidv4(),
+    outletId,
+    shiftId,
+    'pty_saurashtra_logistics',
+    'GJ-14-TR-8822',
+    'prod_hsd',
+    300.0,
+    9220,
+    sale2Paise,
+    'SL-10022'
+  );
+  db.prepare('UPDATE parties SET current_balance_paise = current_balance_paise + ? WHERE id = ?').run(sale2Paise, 'pty_saurashtra_logistics');
+
+  // 9. Staff Attendance (Today & Yesterday)
+  const today = businessDate;
+  const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+  const attendanceEntries = [
+    { user_id: 'usr_manager', date: today, shift_number: 1, status: 'PRESENT', notes: 'Forecourt shift in-charge' },
+    { user_id: 'usr_attendant_1', date: today, shift_number: 1, status: 'PRESENT', notes: 'Dispenser 1 MPD operator' },
+    { user_id: 'usr_attendant_2', date: today, shift_number: 1, status: 'PRESENT', notes: 'Dispenser 2 MPD operator' },
+    { user_id: 'usr_accountant', date: today, shift_number: 1, status: 'PRESENT', notes: 'Back-office khata audit' },
+    { user_id: 'usr_manager', date: yesterday, shift_number: 1, status: 'PRESENT', notes: 'On-time' },
+    { user_id: 'usr_attendant_1', date: yesterday, shift_number: 1, status: 'PRESENT', notes: 'On-time' },
+    { user_id: 'usr_attendant_2', date: yesterday, shift_number: 1, status: 'HALF_DAY', notes: 'Afternoon medical leave' },
+    { user_id: 'usr_accountant', date: yesterday, shift_number: 1, status: 'PRESENT', notes: 'On-time' },
+  ];
+
+  for (const a of attendanceEntries) {
+    db.prepare(`
+      INSERT INTO staff_attendance (id, user_id, date, shift_number, status, notes)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(uuidv4(), a.user_id, a.date, a.shift_number, a.status, a.notes);
+  }
+
+  // 10. Sample Staff Advance & Balanced Payment Voucher
+  const advanceAmountPaise = 300000; // ₹3,000 cash advance
+  const { entry: advVoucher, lines: advLines } = JournalEngine.createPaymentVoucher({
+    outlet_id: outletId,
+    voucher_date: today,
+    vendor_name: 'Forecourt Attendant 1',
+    expense_category: 'Staff Advance',
+    amount_paise: advanceAmountPaise,
+    paid_from: 'CASH',
+    narration: 'Staff salary advance disbursed for festival expenses',
+  });
+
+  db.prepare(`
+    INSERT INTO journal_entries (id, outlet_id, voucher_number, voucher_date, reference_type, reference_id, narration, total_debit_paise, total_credit_paise)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(advVoucher.id, advVoucher.outlet_id, advVoucher.voucher_number, advVoucher.voucher_date, advVoucher.reference_type, advVoucher.reference_id, advVoucher.narration, advVoucher.total_debit_paise, advVoucher.total_credit_paise);
+
+  const insertLine = db.prepare(`
+    INSERT INTO journal_lines (id, journal_entry_id, account_code, account_name, debit_paise, credit_paise)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  for (const l of advLines) {
+    insertLine.run(l.id, l.journal_entry_id, l.account_code, l.account_name, l.debit_paise, l.credit_paise);
+  }
+
+  db.prepare(`
+    INSERT INTO staff_advances (id, user_id, amount_paise, date, reason, status, recovered_amount_paise, voucher_id)
+    VALUES (?, ?, ?, ?, ?, 'DISBURSED', 0, ?)
+  `).run(uuidv4(), 'usr_attendant_1', advanceAmountPaise, today, 'Festival advance', advVoucher.id);
+
+  // 11. Sample Contra Banking Voucher (Cash Deposit to SBI)
+  const depositPaise = 25000000; // ₹2,50,000 forecourt cash deposited into Current Account
+  const { entry: contraVoucher, lines: contraLines } = JournalEngine.createContraBankingVoucher({
+    outlet_id: outletId,
+    voucher_date: today,
+    transaction_type: 'CASH_DEPOSIT',
+    bank_name: 'SBI IOCL Current Account (Gadhiya Branch)',
+    amount_paise: depositPaise,
+    reference_no: 'SBI-DEP-9941',
+    narration: 'Forecourt daily cash sales deposited into SBI IOCL Current Account',
+  });
+
+  db.prepare(`
+    INSERT INTO journal_entries (id, outlet_id, voucher_number, voucher_date, reference_type, reference_id, narration, total_debit_paise, total_credit_paise)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(contraVoucher.id, contraVoucher.outlet_id, contraVoucher.voucher_number, contraVoucher.voucher_date, contraVoucher.reference_type, contraVoucher.reference_id, contraVoucher.narration, contraVoucher.total_debit_paise, contraVoucher.total_credit_paise);
+
+  for (const l of contraLines) {
+    insertLine.run(l.id, l.journal_entry_id, l.account_code, l.account_name, l.debit_paise, l.credit_paise);
+  }
+
+  console.log('✅ Seeding complete: SK Petroleum (Indian Oil), Gadhiya initialized with full facilities.');
 }
 
 if (process.argv[1]?.includes('seed.ts') || process.argv[1]?.includes('seed')) {

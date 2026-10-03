@@ -264,6 +264,65 @@ CREATE TABLE IF NOT EXISTS audit_events (
   created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
 );
 
+CREATE TABLE IF NOT EXISTS staff_attendance (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  date TEXT NOT NULL,
+  shift_number INTEGER NOT NULL DEFAULT 1,
+  status TEXT NOT NULL, -- PRESENT, ABSENT, LEAVE, HALF_DAY
+  notes TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE TABLE IF NOT EXISTS staff_advances (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  amount_paise INTEGER NOT NULL,
+  date TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'DISBURSED', -- REQUESTED, DISBURSED, RECOVERED
+  recovered_amount_paise INTEGER NOT NULL DEFAULT 0,
+  voucher_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE TABLE IF NOT EXISTS staff_payroll (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  month TEXT NOT NULL, -- YYYY-MM
+  base_salary_paise INTEGER NOT NULL,
+  advance_deducted_paise INTEGER NOT NULL DEFAULT 0,
+  incentives_paise INTEGER NOT NULL DEFAULT 0,
+  net_salary_paise INTEGER NOT NULL,
+  status TEXT NOT NULL DEFAULT 'APPROVED', -- DRAFT, APPROVED, PAID
+  voucher_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE TABLE IF NOT EXISTS customer_vehicles (
+  id TEXT PRIMARY KEY,
+  party_id TEXT NOT NULL REFERENCES parties(id),
+  vehicle_no TEXT NOT NULL,
+  make_model TEXT,
+  driver_name TEXT,
+  driver_phone TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
+CREATE TABLE IF NOT EXISTS banking_transactions (
+  id TEXT PRIMARY KEY,
+  outlet_id TEXT NOT NULL REFERENCES outlets(id),
+  transaction_type TEXT NOT NULL, -- CASH_DEPOSIT, BANK_WITHDRAWAL, UPI_SETTLEMENT, CARD_SETTLEMENT
+  amount_paise INTEGER NOT NULL,
+  source_account TEXT NOT NULL,
+  destination_account TEXT NOT NULL,
+  reference_no TEXT,
+  transaction_date TEXT NOT NULL,
+  narration TEXT NOT NULL,
+  voucher_id TEXT,
+  created_at TEXT NOT NULL DEFAULT (CURRENT_TIMESTAMP)
+);
+
 CREATE TABLE IF NOT EXISTS sync_queue (
   id TEXT PRIMARY KEY,
   outlet_id TEXT NOT NULL,
